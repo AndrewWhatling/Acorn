@@ -1,7 +1,18 @@
 from pxr import Usd, UsdShade, UsdGeom, Sdf
 
 
-def recursive_move_prims(stage: Usd.Stage, root_prim: Usd.Prim, path: str) -> Usd.Stage.Open:
+def recursive_move_prims(stage: Usd.Stage, root_prim: Usd.Prim, path: str) -> Usd.Stage:
+    """
+    Recursively reparents all given primitives to a new parent in the stage.
+
+    Args:
+        stage (Usd.Stage): Input Stage .
+        root_prim (Usd.Prim): Primitive to loop over.
+        path (str): New path to move primitive under.
+
+    Returns:
+        Usd.Stage: Stage with reparented prims.
+    """
     for prim in root_prim.GetChildren():
         type = prim.GetTypeName()
         name = prim.GetName()
@@ -19,39 +30,13 @@ def recursive_move_prims(stage: Usd.Stage, root_prim: Usd.Prim, path: str) -> Us
     return stage
 
 
-def move_prim(stage: Usd.Stage, prim: Usd.Prim, path: str, rename=None) -> Usd.Stage:
-    type = prim.GetTypeName()
-    name = prim.GetName()
-    
-    if rename != None:
-        new_path = f"{path}/{rename}"
-    else:
-        new_path = f"{path}/{name}"
-    new_prim = stage.DefinePrim(new_path, type)
+def set_prim_defaults(prim: Usd.Prim):
+    """
+    Sets intended default values on given primitive.
 
-    for attr in prim.GetAttributes():
-
-        if not attr.HasAuthoredValue():
-            continue
-
-        new_attr = new_prim.GetAttribute(attr.GetName())
-        if not new_attr:
-            new_attr = new_prim.CreateAttribute(attr.GetName(), attr.GetTypeName())
-
-        if attr.Get() != None:
-            if attr.ValueMightBeTimeVarying():
-                for t in attr.GetTimeSamples():
-                    value = attr.Get(t)
-                    new_attr.Set(value, t)
-            else:
-                new_attr.Set(attr.Get())
-
-    transfer_material(prim, new_prim)
-    stage.RemovePrim(prim.GetPath())
-    return stage
-
-
-def set_prim_defaults(prim):
+    Args:
+        prim (Usd.Prim): Primitive to set default values on.
+    """
     if prim.IsA("Mesh"):
         mesh = UsdGeom.Mesh(prim)
         mesh.GetNormalsAttr().Clear()
@@ -60,6 +45,13 @@ def set_prim_defaults(prim):
 
 
 def transfer_material(from_prim: Usd.Prim, to_prim: Usd.Prim):
+    """
+    Creates a mat primvar on second primitive based on first primitives material.
+
+    Args:
+        from_prim (Usd.Prim): Primitive with material.
+        to_prim (Usd.Prim): Primitive to put mat primvar on.
+    """
     binding_api = UsdShade.MaterialBindingAPI(from_prim)
     material = binding_api.GetDirectBinding().GetMaterial()
     
@@ -71,11 +63,29 @@ def transfer_material(from_prim: Usd.Prim, to_prim: Usd.Prim):
 
 
 def flatten_stage(stage: Usd.Stage) -> Usd.Stage:
+    """
+    Flattens Usd stage.
+
+    Args:
+        stage (Usd.Stage): Stage to flatten.
+
+    Returns:
+        Usd.Stage: Flattened Stage.
+    """
     layer = stage.Flatten()
     return Usd.Stage.Open(layer)
 
 
 def get_stage_root_prims(stage: Usd.Stage) -> list[Usd.Prim]:
+    """
+    Gets all primitives under root of the stage.
+
+    Args:
+        stage (Usd.Stage): Stage to get root primitives of.
+
+    Returns:
+        list[Usd.Prim]: List of primitives under root of stage.
+    """
     root = stage.GetPrimAtPath("/")
     root_prims = []
     for child in root.GetChildren():
@@ -85,6 +95,16 @@ def get_stage_root_prims(stage: Usd.Stage) -> list[Usd.Prim]:
 
 
 def define_asset_hierarchy(stage: Usd.Stage, path: str) -> Usd.Stage:
+    """
+    Creates primitives based on given path.
+
+    Args:
+        stage (Usd.Stage): Stage to define new primitives on.
+        path (str): Path of new primitives to make.
+
+    Returns:
+        Usd.Stage: Stage with newly defined primitives.
+    """
     split_path = [p for p in path.split("/") if p]
     current = ""
 
@@ -100,6 +120,15 @@ def define_asset_hierarchy(stage: Usd.Stage, path: str) -> Usd.Stage:
 
 
 def remove_meshes(stage: Usd.Stage) -> Usd.Stage:
+    """
+    Removes all mesh primitives in Stage.
+
+    Args:
+        stage (Usd.Stage): Stage to remove meshes in.
+
+    Returns:
+        Usd.Stage: Stage with meshes removed.
+    """
     to_remove = []
 
     for prim in stage.Traverse():
@@ -113,6 +142,17 @@ def remove_meshes(stage: Usd.Stage) -> Usd.Stage:
 
 
 def remove_mats(stage: Usd.Stage) -> Usd.Stage:
+    """
+    Removes materials in Stage. 
+
+    Args:
+        stage (Usd.Stage): _description_
+
+    Returns:
+        Usd.Stage: _description_
+    """
+
+    "Currently designed to remove materials from USD files coming from Maya."
     to_remove = []
 
     for prim in stage.Traverse():
@@ -126,6 +166,16 @@ def remove_mats(stage: Usd.Stage) -> Usd.Stage:
 
 
 def create_new_camera(stage: Usd.Stage, path: str) -> Usd.Stage:
+    """
+    Creates camera primitive.
+
+    Args:
+        stage (Usd.Stage): Stage to create camera on.
+        path (str): Path for the camera primitive to be made.
+
+    Returns:
+        Usd.Stage: Stage with camera primitive.
+    """
     prims = []
 
     for prim in stage.Traverse():
@@ -188,7 +238,14 @@ def create_new_camera(stage: Usd.Stage, path: str) -> Usd.Stage:
     return stage
 
 
-def transfer_xform_ops(src_prim, dst_prim):
+def transfer_xform_ops(src_prim: Usd.Prim, dst_prim: Usd.Prim):
+    """
+    Transfers xforms from one primitive to another.
+
+    Args:
+        src_prim (Usd.Prim): Primitive to transfer xforms from.
+        dst_prim (Usd.Prim): Primitive to transfer xforms to.
+    """
     dst_xf = UsdGeom.Xformable(dst_prim)
     src_xf = UsdGeom.Xformable(src_prim)
 
@@ -222,7 +279,14 @@ def transfer_xform_ops(src_prim, dst_prim):
         #     dst_attr.Set(src_attr.Get())
 
 
-def transfer_primvars(src_prim, dst_prim):
+def transfer_primvars(src_prim: Usd.Prim, dst_prim: Usd.Prim):
+    """
+    Transfers primvars from one primitive to another.
+
+    Args:
+        src_prim (Usd.Prim): Primitive to transfer primvars from.
+        dst_prim (Usd.Prim): Primitive to transfer primvars to.
+    """
     src_pv_api = UsdGeom.PrimvarsAPI(src_prim)
     dst_pv_api = UsdGeom.PrimvarsAPI(dst_prim)
 
@@ -263,10 +327,11 @@ def transfer_primvars(src_prim, dst_prim):
 
 def transfer_all(src_prim: Usd.Prim, dst_prim: Usd.Prim):
     """
-    Transfer everything from src_prim to dst_prim:
-    - XformOps
-    - Primvars
-    - Generic attributes
+    Transfers xforms, primvars and attributes from one primitive to another.
+
+    Args:
+        src_prim (Usd.Prim): Primitive to transfer values from.
+        dst_prim (Usd.Prim): Primitive to transfer values to.
     """
     
     # --- 1. XformOps ---
@@ -289,14 +354,23 @@ def transfer_all(src_prim: Usd.Prim, dst_prim: Usd.Prim):
         if not dst_attr:
             dst_attr = dst_prim.CreateAttribute(name, attr.GetTypeName(), custom=True, variability=attr.GetVariability())
         
-        if attr.ValueMightBeTimeVarying():
-            for t in attr.GetTimeSamples():
-                dst_attr.Set(attr.Get(t), t)
-        else:
-            dst_attr.Set(attr.Get())
+        handle_attribute_transfer(dst_attr, attr)
+
+        # if attr.ValueMightBeTimeVarying():
+        #     for t in attr.GetTimeSamples():
+        #         dst_attr.Set(attr.Get(t), t)
+        # else:
+        #     dst_attr.Set(attr.Get())
 
 
-def handle_attribute_transfer(new, old):
+def handle_attribute_transfer(new: Usd.Attribute, old: Usd.Attribute):
+    """
+    Transfers one attribute from one primitive to another.
+
+    Args:
+        new (Usd.Attribute): Primitive to transfer values from.
+        old (Usd.Attribute): Primitive to transfer values to.
+    """
 
     if old.ValueMightBeTimeVarying():
         new.Clear()

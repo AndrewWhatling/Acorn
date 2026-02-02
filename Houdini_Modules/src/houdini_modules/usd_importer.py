@@ -1,5 +1,6 @@
 import os
 from utils import io_utils as io
+from typing import Any
 
 try:
     import hou 
@@ -16,7 +17,17 @@ shotnums = [i for i in io.read_json(fr"{database}\shotlist.json")]
 assetlist = io.read_json(fr"{database}\assetlist.json")
 
 
-def root_menu_script(kwargs, mode="LOP"):
+def root_menu_script(kwargs: dict[str, Any], mode="LOP") -> list[str]:
+    """
+    Menu script for root parameter on usd importer node.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments from usd importer node.
+        mode (str, optional): Context of usd importer node. Defaults to "LOP".
+
+    Returns:
+        list[str]: Menu of assets for user to select from.
+    """
 
     if mode == "LOP":
         unique = sorted(set(assets) | set(shots))
@@ -27,7 +38,17 @@ def root_menu_script(kwargs, mode="LOP"):
 
 
 
-def type_menu_script(kwargs, mode="LOP"):
+def type_menu_script(kwargs: dict[str, Any], mode="LOP") -> list[str]:
+    """
+    Menu script for type parameter on usd importer node.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments from usd importer node.
+        mode (str, optional): Context of usd importer node. Defaults to "LOP".
+
+    Returns:
+        list[str]: Menu of asset types for user to select from.
+    """
     self = kwargs["node"]
     current = self.parm("root").rawValue()
     unique = set(assets.get(current, [])) | set(shots.get(current, []))
@@ -42,11 +63,29 @@ def type_menu_script(kwargs, mode="LOP"):
         return ["N/A", "N/A"]
 
 
-def shot_menu_script(kwargs):
+def shot_menu_script(kwargs: dict[str, Any]) -> list[str]:
+    """
+    Menu script for shot parameter on usd importer node.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments from usd importer node.
+
+    Returns:
+        list[str]: Menu of shot numbers for user to select from.
+    """
     return sorted([i for j in shotnums for i in (j, j)])
 
 
-def asset_menu_script(kwargs):
+def asset_menu_script(kwargs: dict[str, Any]) -> list[str]:
+    """
+    Menu script for asset parameter on usd importer node.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments from usd importer node.
+
+    Returns:
+        list[str]: Menu of asset names for user to select from.
+    """
     self = kwargs["node"]
     current = self.parm("root").rawValue()
     asset_vals = [i for i in assetlist if i.startswith(current.capitalize())]
@@ -58,7 +97,16 @@ def asset_menu_script(kwargs):
         return ["N/A", "N/A"]
 
 
-def version_menu_script(kwargs):
+def version_menu_script(kwargs: dict[str, Any]) -> list[str]:
+    """
+    Menu script for asset parameter on usd importer node.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments from usd importer node.
+
+    Returns:
+        list[str]: Menu of asset versions for user to select from.
+    """
     self = kwargs["node"]
     root = self.parm("root").rawValue()
     asset = self.parm("asset").rawValue()
@@ -92,7 +140,13 @@ def version_menu_script(kwargs):
     return vals
 
 
-def import_path():
+def import_path() -> str:
+    """
+    Generates path for usd importer to load Usd file from.
+
+    Returns:
+        str: Path to Usd file.
+    """
     root = hou.parm("../root").rawValue()
     asset = hou.parm("../asset").rawValue()
     curr_type = hou.parm("../type").rawValue().lower()

@@ -17,9 +17,19 @@ except ImportError:
 
 
 class ShotManagerUi(QtWidgets.QMainWindow):
+    """
+    Ui for shot manager.
 
-
+    Args:
+        QtWidgets (QtWidgets.QMainWindow): Parent software's main window to inherit from.
+    """
     def __init__(self, parent=None):
+        """
+        Initialise Ui.
+
+        Args:
+            parent (QtWidgets.QMainWindow, optional): Parent software's main window to inherit from. Defaults to None.
+        """
         super().__init__(parent)
 
         self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.WindowStaysOnTopHint)
@@ -30,6 +40,9 @@ class ShotManagerUi(QtWidgets.QMainWindow):
 
 
     def initUI(self):
+        """
+        Sets up Ui boxes.
+        """
         # Setting defaults
 
         font = QtGui.QFont("Fira Code", 15)
@@ -141,11 +154,17 @@ class ShotManagerUi(QtWidgets.QMainWindow):
 
 
     def connectSignals(self):
+        """
+        Connects Ui buttons
+        """
         self.cancel.clicked.connect(self.close)
         self.add_new.clicked.connect(lambda: self.add_shot())
 
 
     def add_shot(self):
+        """
+        Add shot data to json file.
+        """
         logic = sml.ShotManagerLogic(self)
         logic.add_shot()
 

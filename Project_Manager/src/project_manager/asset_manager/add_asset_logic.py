@@ -5,6 +5,13 @@ from project_manager.asset_manager import asset_log_logic as asset_logger
 
 
 def add_asset(asset_name: str, asset_type: str):
+    """
+    Adds asset to folder structure.
+
+    Args:
+        asset_name (str): Name of asset to add.
+        asset_type (str): Type of asset to add.
+    """
     asset_name = su.to_camel_case(asset_name)
     database = os.getenv("DATABASE")
     structure = io.read_json(fr"{database}\structure.json")

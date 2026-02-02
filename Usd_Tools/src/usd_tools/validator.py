@@ -4,6 +4,15 @@ from usd_tools import core
 
 class Validator:
     def validate_anim(self, stage: Usd.Stage) -> Usd.Stage:
+        """
+        Cleans up unneccessary animation attributes.
+
+        Args:
+            stage (Usd.Stage): Stage to clean.
+
+        Returns:
+            Usd.Stage: Cleaned Stage.
+        """
         to_remove = []
         for prim in stage.Traverse():
             if prim.GetName() == "mtl" or prim.IsA("GeomSubset"):
@@ -34,6 +43,15 @@ class Validator:
 
 
     def validate_geo(self, stage: Usd.Stage) -> Usd.Stage:
+        """
+        Cleans up unneccessary geometry attributes.
+
+        Args:
+            stage (Usd.Stage): Stage to clean.
+
+        Returns:
+            Usd.Stage: Cleaned Stage.
+        """
         to_remove = []
         
         for prim in stage.Traverse():
@@ -53,6 +71,15 @@ class Validator:
     
     
     def validate_cam(self, stage: Usd.Stage) -> Usd.Stage:
+        """
+        Cleans up unneccessary camera attributes.
+
+        Args:
+            stage (Usd.Stage): Stage to clean.
+
+        Returns:
+            Usd.Stage: Cleaned Stage.
+        """
         for prim in stage.Traverse():
             if prim.HasAuthoredMetadata("kind"):
                 prim.ClearMetadata("kind")
@@ -64,7 +91,16 @@ class Validator:
         return stage
         
 
-    def validate_attribute(self, stage: Usd.Stage, prim: Usd.Prim, attr: Usd.Prim.GetAttribute, type: str):
+    def validate_attribute(self, stage: Usd.Stage, prim: Usd.Prim, attr: Usd.Attribute, type: str):
+        """
+        Cleans up unneccessary attribute.
+
+        Args:
+            stage (Usd.Stage): Stage to clean.
+            prim (Usd.Prim): Prim to clean.
+            attr (Usd.Attribute): Attribute to clean.
+            type (str): Type of cleaning to perform.
+        """
         name = attr.GetName()
         first_frame = stage.GetStartTimeCode()
 

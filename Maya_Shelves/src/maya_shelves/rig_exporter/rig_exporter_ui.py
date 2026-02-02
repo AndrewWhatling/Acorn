@@ -18,7 +18,19 @@ reload(aa)
 
 
 class RigExporterUi(QtWidgets.QMainWindow):
+    """
+    Ui for rig exporter.
+
+    Args:
+        QtWidgets (QtWidgets.QMainWindow): Parent software's main window to inherit from.
+    """
     def __init__(self, parent=None):
+        """
+        Initialise Ui.
+
+        Args:
+            parent (QtWidgets.QMainWindow, optional): Parent software's main window to inherit from. Defaults to None.
+        """
         super().__init__(parent)
 
         self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.WindowStaysOnTopHint)
@@ -41,6 +53,9 @@ class RigExporterUi(QtWidgets.QMainWindow):
 
 
     def initUI(self):
+        """
+        Sets up Ui boxes.
+        """
         # Setting defaults
 
         font = QtGui.QFont("Fira Code", 15)
@@ -104,22 +119,34 @@ class RigExporterUi(QtWidgets.QMainWindow):
 
 
     def connectSignals(self):
+        """
+        Connects Ui buttons
+        """
         self.cancel.clicked.connect(self.close)
         self.asset_type_combobox.currentIndexChanged.connect(self.on_asset_type_changed)
         self.publish.clicked.connect(self.publish_rig)
 
 
     def on_asset_type_changed(self):
+        """
+        Update script for when asset type is changed.
+        """
         self.update_asset_name_combobox()
 
 
     def update_asset_name_combobox(self):
+        """
+        Update script to change asset names displayed.
+        """
         self.asset_name_combobox.clear()
         path = fr"{self.depot}\assets\{self.asset_type_combobox.currentText()}"
         ui_utils.populate_combobox(self.asset_name_combobox, path)
 
 
     def publish_rig(self):
+        """
+        Exports rig file to folder structure.
+        """
         asset_name = self.asset_name_combobox.currentText()
         asset_type = self.asset_type_combobox.currentText()
         if asset_name == "Empty" or asset_type == "Empty":

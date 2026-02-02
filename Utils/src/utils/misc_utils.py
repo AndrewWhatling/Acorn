@@ -1,6 +1,15 @@
 import os
 
-def count_python_lines(root_folder):
+def count_python_lines(root_folder: str) -> str:
+    """
+    Counts number of lines of python recursively in given folder structure
+
+    Args:
+        root_folder (str): Folder path to look for python files in.
+
+    Returns:
+        str: Total lines of python code.
+    """
     total_lines = 0
     py_files = 0
 

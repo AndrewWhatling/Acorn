@@ -16,10 +16,22 @@ except ImportError:
 
 
 class AddAssetUi(QtWidgets.QMainWindow):
+    """
+    Ui for adding assets to folder structure.
+
+    Args:
+        QtWidgets (QtWidgets.QMainWindow): Parent software's main window to inherit from.
+    """
 
     assetAdded = Signal(str, str)
 
     def __init__(self, parent=None, input_asset_type=None):
+        """
+        Initialise Ui.
+
+        Args:
+            parent (QtWidgets.QMainWindow, optional): Parent software's main window to inherit from. Defaults to None.
+        """
         super().__init__(parent)
 
         self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.WindowStaysOnTopHint)
@@ -36,6 +48,9 @@ class AddAssetUi(QtWidgets.QMainWindow):
 
 
     def initUI(self):
+        """
+        Sets up Ui boxes.
+        """
         # Setting defaults
 
         font = QtGui.QFont("Fira Code", 15)
@@ -113,11 +128,17 @@ class AddAssetUi(QtWidgets.QMainWindow):
 
 
     def connectSignals(self):
+        """
+        Connects Ui buttons
+        """
         self.cancel.clicked.connect(self.close)
         self.publish.clicked.connect(self.add_asset)
 
 
     def add_asset(self):
+        """
+        Add asset to folder structure.
+        """
         asset_type = self.asset_type_combobox.currentText()
         asset_name = su.to_camel_case(self.asset_name_lineedit.text())
         if asset_name == "":

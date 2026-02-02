@@ -15,16 +15,31 @@ except ModuleNotFoundError:
 
 
 class AssetReferencerLogic:
-    def __init__(self, asset_name, asset_type, reference_type, version_num):
+    """
+    Logic class for asset referencer.
+    """
+    def __init__(self, asset_name: str, asset_type: str, reference_object: str, version_num: str):
+        """
+        Initialise asset properties to find file with.
+
+        Args:
+            asset_name (str): Name of asset to reference.
+            asset_type (str): Type of asset to reference.
+            reference_object (str): Object to reference.
+            version_num (str): Version of asset to reference.
+        """
         self.asset_name = asset_name
         self.asset_type = asset_type
-        self.reference_type = reference_type
+        self.reference_object = reference_object
         self.version_num = version_num
         self.proj = os.getenv("PROJ")
 
 
     def reference(self):
-        root_path = os.path.join(self.proj, "35_depot", "assets", self.asset_type, self.asset_name, self.reference_type)
+        """
+        References selected file into Maya.
+        """
+        root_path = os.path.join(self.proj, "35_depot", "assets", self.asset_type, self.asset_name, self.reference_object)
         path = ""
         for i in os.listdir(root_path):
             version = i.split(".")[0][-4:]

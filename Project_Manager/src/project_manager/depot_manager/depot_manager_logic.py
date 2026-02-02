@@ -4,6 +4,9 @@ from pprint import pprint
 
 
 class DepotManagerLogic:
+    """
+    Logic backend for depot manager.
+    """
     def __init__(self):
         self.proj = os.getenv("PROJ")
         self.database = os.getenv("DATABASE")
@@ -12,6 +15,9 @@ class DepotManagerLogic:
 
     
     def update_depot(self):
+        """
+        Updates depot folder structure.
+        """
         structure = self.structure
         assets = structure["assets"]
         shots = structure["shots"]

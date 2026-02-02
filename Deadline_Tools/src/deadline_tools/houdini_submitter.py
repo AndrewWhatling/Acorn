@@ -4,10 +4,20 @@ from utils import deadline_utils
 from utils import file_utils
 import tempfile
 import subprocess
+from typing import Any
 
 
 class HoudiniSubmitter:
-    def __init__(self, kwargs):
+    """
+    Custom submitter for Houdini to Deadline.
+    """
+    def __init__(self, kwargs: dict[str, Any]):
+        """
+        Initialise values from Houdini submitter node.
+
+        Args:
+            kwargs (dict[str]): Keyword arguments from submitter node.
+        """
         self.proj = os.getenv("PROJ")
         self.database = os.getenv("DATABASE")
 
@@ -24,6 +34,9 @@ class HoudiniSubmitter:
 
 
     def submit_to_deadline(self):
+        """
+        Creates and submits job to deadline.
+        """
         self.get_frames()
         job_info = tempfile.NamedTemporaryFile(delete=False, suffix="_job.info", mode="w", encoding="utf-8")
         plugin_info = tempfile.NamedTemporaryFile(delete=False, suffix="_plugin.info", mode="w", encoding="utf-8")
@@ -79,6 +92,9 @@ class HoudiniSubmitter:
 
 
     def get_frames(self):
+        """
+        Gets current frame range to use from submitter node.
+        """
         if self.node.parm("trange").eval() == 0:
             self.framerange = f"{int(hou.frame())}"
         else:

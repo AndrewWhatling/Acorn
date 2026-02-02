@@ -4,13 +4,22 @@ import hou
 
 
 class PointDeformProcedural:
+    """
+    Runs backend code for the point deform procedural node.
+    """
     def __init__(self):
+        """
+        Initialise data from current node.
+        """
         self.node = hou.pwd()
         self.name = self.node.name()
         self.parent = self.node.parent()
 
 
     def deform(self):
+        """
+        Deforms first input geometry by third input animated curve based on second input rest curve.
+        """
         node = self.node
         name = self.name
         parent = self.parent

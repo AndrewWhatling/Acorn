@@ -18,7 +18,19 @@ reload(aa)
 
 
 class AssetReferencerUi(QtWidgets.QMainWindow):
+    """
+    Ui for asset referencer.
+
+    Args:
+        QtWidgets (QtWidgets.QMainWindow): Parent software's main window to inherit from.
+    """
     def __init__(self, parent=None):
+        """
+        Initialise Ui.
+
+        Args:
+            parent (QtWidgets.QMainWindow, optional): Parent software's main window to inherit from. Defaults to None.
+        """
         super().__init__(parent)
 
         self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.WindowStaysOnTopHint)
@@ -41,6 +53,9 @@ class AssetReferencerUi(QtWidgets.QMainWindow):
 
 
     def initUI(self):
+        """
+        Sets up Ui boxes.
+        """
         # Setting defaults
 
         font = QtGui.QFont("Fira Code", 15)
@@ -73,7 +88,7 @@ class AssetReferencerUi(QtWidgets.QMainWindow):
         middle = QtWidgets.QWidget()
         middle_layout = QtWidgets.QHBoxLayout(middle)
 
-        self.reference_type = ui_utils.new_parm("Reference:", middle_layout, font, box_width, "QComboBox")
+        self.reference_object = ui_utils.new_parm("Reference:", middle_layout, font, box_width, "QComboBox")
         self.version = ui_utils.new_parm("Version:", middle_layout, font, box_width, "QComboBox")
 
         middle_layout.addStretch(1)
@@ -104,64 +119,88 @@ class AssetReferencerUi(QtWidgets.QMainWindow):
 
         self.asset_type_combobox.addItems([i for i in self.structure["assets"]])
         self.update_asset_name_combobox()
-        self.update_reference_type_combobox()
+        self.update_reference_object_combobox()
         self.update_version()
 
 
     def connectSignals(self):
+        """
+        Connects Ui buttons
+        """
         self.cancel.clicked.connect(self.close)
         self.asset_type_combobox.currentIndexChanged.connect(self.on_asset_type_changed)
         self.reference.clicked.connect(self.reference_asset)
         self.asset_name_combobox.currentIndexChanged.connect(self.on_asset_name_changed)
-        self.reference_type.currentIndexChanged.connect(self.on_reference_type_changed)
+        self.reference_object.currentIndexChanged.connect(self.on_reference_object_changed)
 
 
     def on_asset_type_changed(self):
+        """
+        Update script for when asset is changed.
+        """
         self.update_asset_name_combobox()
-        self.update_reference_type_combobox()
+        self.update_reference_object_combobox()
         self.update_version()
 
     
-    def on_reference_type_changed(self):
+    def on_reference_object_changed(self):
+        """
+        Update script for when asset is changed.
+        """
         self.update_version()
 
 
     def on_asset_name_changed(self):
+        """
+        Update script for when asset name is changed.
+        """
         self.update_version()
 
 
     def update_asset_name_combobox(self):
+        """
+        Updates asset name.
+        """
         self.asset_name_combobox.clear()
         path = fr"{self.depot}\assets\{self.asset_type_combobox.currentText()}"
         ui_utils.populate_combobox(self.asset_name_combobox, path)
 
 
-    def update_reference_type_combobox(self):
-        self.reference_type.clear()
+    def update_reference_object_combobox(self):
+        """
+        Updates reference object.
+        """
+        self.reference_object.clear()
         if "geo" in self.structure["assets"][self.asset_type_combobox.currentText()]:
-            self.reference_type.addItems(["Geo"])
+            self.reference_object.addItems(["Geo"])
         if "rig" in self.structure["assets"].get(self.asset_type_combobox.currentText(), []):
-            self.reference_type.addItems(["Rig"])
+            self.reference_object.addItems(["Rig"])
 
 
     def reference_asset(self):
+        """
+        References asset into scene.
+        """
         asset_name = self.asset_name_combobox.currentText()
         asset_type = self.asset_type_combobox.currentText()
-        reference_type = self.reference_type.currentText()
+        reference_object = self.reference_object.currentText()
         version_num = self.version.currentText()
-        if asset_name == "Empty" or asset_type == "Empty" or reference_type == "Empty" or version_num == "Empty":
+        if asset_name == "Empty" or asset_type == "Empty" or reference_object == "Empty" or version_num == "Empty":
             ui_utils.popup_warning("Please select a valid asset to reference.", self)
         else:
-            referencer = logic.AssetReferencerLogic(asset_name, asset_type, reference_type, version_num)
+            referencer = logic.AssetReferencerLogic(asset_name, asset_type, reference_object, version_num)
             referencer.reference()
             self.close()
 
 
     def update_version(self):
+        """
+        Updates version numbers.
+        """
         ver = self.version
         name = self.asset_name_combobox.currentText()
         asset_type = self.asset_type_combobox.currentText()
-        ref_type = self.reference_type.currentText()
+        ref_type = self.reference_object.currentText()
         ver.clear()
 
         if name == "Empty" or type == "Empty" or ref_type == "Empty":

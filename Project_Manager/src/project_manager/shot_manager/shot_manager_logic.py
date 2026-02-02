@@ -1,10 +1,23 @@
 import os
 from utils import io_utils as io
 from project_manager.depot_manager import depot_manager_logic
+try:
+    from PySide6 import QtWidgets
+except ImportError:
+    from PySide2 import QtWidgets
+
 
 class ShotManagerLogic:
-    def __init__(self, ui):
-        
+    """
+    Logic backend for shot manager.
+    """
+    def __init__(self, ui: QtWidgets.QWidget):
+        """
+        Initialises json files to read from.
+
+        Args:
+            ui (QtWidgets.QWidget): Parent Qt Ui.
+        """
         self.ui = ui
         self.proj = os.getenv("PROJ")
         self.depot = fr"{self.proj}\35_depot"
@@ -14,6 +27,9 @@ class ShotManagerLogic:
 
 
     def add_shot(self):
+        """
+        Adds shot information to shotlist json file.
+        """
         self.data = io.read_json(self.shotlist)
 
         shot_num = self.ui.shot_num_lineedit.text()

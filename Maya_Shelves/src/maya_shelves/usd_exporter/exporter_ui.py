@@ -15,7 +15,19 @@ reload(aa)
 
 
 class MayaUsdExporterUi(QtWidgets.QMainWindow):
+    """
+    Ui for maya usd exporter.
+
+    Args:
+        QtWidgets (QtWidgets.QMainWindow): Parent software's main window to inherit from.
+    """
     def __init__(self, parent=None):
+        """
+        Initialise Ui.
+
+        Args:
+            parent (QtWidgets.QMainWindow, optional): Parent software's main window to inherit from. Defaults to None.
+        """
         super().__init__(parent)
 
         self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.WindowStaysOnTopHint)
@@ -38,6 +50,9 @@ class MayaUsdExporterUi(QtWidgets.QMainWindow):
 
 
     def initUI(self):
+        """
+        Sets up Ui boxes.
+        """
         # Setting defaults
 
         font = QtGui.QFont("Fira Code", 15)
@@ -118,6 +133,9 @@ class MayaUsdExporterUi(QtWidgets.QMainWindow):
 
 
     def connectSignals(self):
+        """
+        Connects Ui buttons
+        """
         self.cancel.clicked.connect(self.close)
         self.asset_type_combobox.currentIndexChanged.connect(self.on_asset_type_changed)
         self.plus.clicked.connect(self.add_asset)
@@ -125,17 +143,26 @@ class MayaUsdExporterUi(QtWidgets.QMainWindow):
 
 
     def on_asset_type_changed(self):
+        """
+        Update script for when asset type is changed.
+        """
         self.update_asset_name_combobox()
         self.update_export_type_combobox()
 
 
     def update_asset_name_combobox(self):
+        """
+        Update script to change asset names displayed.
+        """
         self.asset_name_combobox.clear()
         path = fr"{self.depot}\assets\{self.asset_type_combobox.currentText()}"
         ui_utils.populate_combobox(self.asset_name_combobox, path)
 
 
     def update_export_type_combobox(self):
+        """
+        Update script to change export type displayed.
+        """
         self.export_type.clear()
         if "geo" in self.structure["assets"][self.asset_type_combobox.currentText()]:
             self.export_type.addItems(["Geo"])
@@ -145,18 +172,31 @@ class MayaUsdExporterUi(QtWidgets.QMainWindow):
 
 
     def add_asset(self):
+        """
+        Pops up add asset Ui.
+        """
         popup = aa.AddAssetUi(self, self.asset_type_combobox.currentText())
         popup.assetAdded.connect(self.on_asset_added)
         popup.show()
 
     
     def on_asset_added(self, asset_name: str, asset_type: str):
+        """
+        Update script for when asset is added.
+
+        Args:
+            asset_name (str): Name of asset.
+            asset_type (str): Type of asset.
+        """
         self.asset_type_combobox.setCurrentText(asset_type)
         self.update_asset_name_combobox()
         self.asset_name_combobox.setCurrentText(asset_name)
 
 
     def publish_asset(self):
+        """
+        Exports selected object as a Usd file.
+        """
         asset_name = self.asset_name_combobox.currentText()
         asset_type = self.asset_type_combobox.currentText()
         export_type = self.export_type.currentText()

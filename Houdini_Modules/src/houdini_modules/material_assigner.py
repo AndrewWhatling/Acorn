@@ -3,17 +3,30 @@ import hou
 from importlib import reload
 from pxr import UsdGeom
 import voptoolutils
+from typing import Any
 
 # Material assigner logic
 
 class MaterialAssigner:
+    """
+    Material automatic assignment backend for material assigner node.
+    """
     def __init__(self, node: hou.Node):
+        """
+        Initialise links to mat lib and assign mat nodes inside HDA.
+
+        Args:
+            node (hou.Node): The material auto assigner node.
+        """
         self.node = node;
         self.matlib = self.node.node("materiallibrary1")
         self.assign = self.node.node("assignmaterial1")
         
 
     def create_mats(self):
+        """
+        Creates materials based on input primitives 'mat' primvar.
+        """
         stage = self.matlib.stage()
         pattern = self.node.evalParm("primpattern")
         if pattern.replace(" ", "") == "":
@@ -65,6 +78,12 @@ class MaterialAssigner:
 # Parameter Menu Scripts
 
 def type_menu_script() -> list[str]:
+    """
+    Menu script for type parameter on material auto assigner node.
+
+    Returns:
+        list[str]: Menu of asset types for user to select from.
+    """
     root = os.getenv("PROJ")
     path = fr"{root}\30_assets\depot"
 
@@ -79,6 +98,12 @@ def type_menu_script() -> list[str]:
 
 
 def name_menu_script() -> list[str]:
+    """
+    Menu script for name parameter on material auto assigner node.
+
+    Returns:
+        list[str]: Menu of asset names for user to select from.
+    """
     root = os.getenv("PROJ")
     type = hou.pwd().parm("type").rawValue()
     path = fr"{root}\30_assets\depot\{type}"
@@ -97,6 +122,12 @@ def name_menu_script() -> list[str]:
 # Internal Node Parameter Scripts
 
 def material_path() -> str:
+    """
+    Generates parent path for material Usd hierarchy.
+
+    Returns:
+        str: Parent path for material Usds to live under in hierarchy.
+    """
     type = hou.parm("../type").rawValue()
     name = hou.parm("../name").rawValue()
 
@@ -108,26 +139,51 @@ def material_path() -> str:
 
 # Python Module Scripts
 
-def update_names(kwargs):
+def update_names(kwargs: dict[str, Any]):
+    """Updates name parameter.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments from the material auto assigner node.
+    """
     kwargs["node"].parm("name").pressButton()
 
 
-def assign_materials(kwargs):
+def assign_materials(kwargs: dict[str, Any]):
+    """Assigns materials to input primitives.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments from the material auto assigner node.
+    """
     assigner = MaterialAssigner(kwargs["node"])
     assigner.create_mats()
         
 
-def populate_materials(kwargs):
+def populate_materials(kwargs: dict[str, Any]):
+    """Populates materials based on given folder.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments from the material auto assigner node.
+    """
     assigner = MaterialAssigner(kwargs["node"])
     assigner.populate_mats()
 
 
-def clear_assignments(kwargs):
+def clear_assignments(kwargs: dict[str, Any]):
+    """Clears all material assignments.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments from the material auto assigner node.
+    """
     kwargs["node"].node("assignmaterial1").parm("nummaterials").set(0)
 
 
-def clear_all(kwargs):
-    kwargs["node"].node("assignmaterial1").parm("nummaterials").set(0)
+def clear_all(kwargs: dict[str, Any]):
+    """Clears all material assignments and delete all materials.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments from the material auto assigner node.
+    """
+    clear_assignments(kwargs)
     for n in kwargs["node"].node("materiallibrary1").children():
         n.destroy()
 
