@@ -1,6 +1,6 @@
 [project]
 name = "houdini_modules"
-version = "0.1.6"
+version = "0.1.7"
 description = "Houdini node python modules"
 readme = "README.md"
 authors = [

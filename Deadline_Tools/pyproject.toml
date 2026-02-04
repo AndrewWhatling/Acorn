@@ -1,6 +1,6 @@
 [project]
 name = "deadline_tools"
-version = "0.1.6"
+version = "0.1.7"
 description = "Deadline toolset"
 readme = "README.md"
 authors = [

@@ -1,6 +1,6 @@
 [project]
 name = "usd_tools"
-version = "0.1.6"
+version = "0.1.7"
 description = "Usd toolset"
 readme = "README.md"
 authors = [
