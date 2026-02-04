@@ -193,20 +193,13 @@ def create_new_camera(stage: Usd.Stage, path: str) -> Usd.Stage:
 
     if len(prims) == 1:
         cam = prims[0]
-        for attr in cam.GetAttributes():
+        for src_attr in cam.GetAttributes():
             
-            if not attr.HasAuthoredValue() or attr.GetName().startswith("xformOp"):
+            if not src_attr.HasAuthoredValue() or src_attr.GetName().startswith("xformOp"):
                 continue
             
-            new_attr = new_prim.CreateAttribute(attr.GetName(), attr.GetTypeName())
-
-            if attr.Get():
-                new_attr.Set(attr.Get())
-
-            if attr.ValueMightBeTimeVarying():
-                for t in attr.GetTimeSamples():
-                    if float(t).is_integer():
-                        new_attr.Set(attr.Get(t), t)
+            dst_attr = new_prim.CreateAttribute(src_attr.GetName(), src_attr.GetTypeName())
+            handle_attribute_transfer(src_attr, dst_attr)
         
         transfer_xform_ops(new_prim, cam)
 
@@ -272,12 +265,6 @@ def transfer_xform_ops(src_prim: Usd.Prim, dst_prim: Usd.Prim):
 
         handle_attribute_transfer(src_attr, dst_attr)
 
-        # if src_attr.ValueMightBeTimeVarying():
-        #     for t in src_attr.GetTimeSamples():
-        #         dst_attr.Set(src_attr.Get(t), t)
-        # else:
-        #     dst_attr.Set(src_attr.Get())
-
 
 def transfer_primvars(src_prim: Usd.Prim, dst_prim: Usd.Prim):
     """
@@ -318,12 +305,6 @@ def transfer_primvars(src_prim: Usd.Prim, dst_prim: Usd.Prim):
         dst_attr = dst_pv.GetAttr()
         handle_attribute_transfer(src_attr, dst_attr)
 
-        # if src_attr.ValueMightBeTimeVarying():
-        #     for t in src_attr.GetTimeSamples():
-        #         dst_attr.Set(src_attr.Get(t), t)
-        # else:
-        #     dst_attr.Set(src_attr.Get())
-
 
 def transfer_all(src_prim: Usd.Prim, dst_prim: Usd.Prim):
     """
@@ -356,12 +337,6 @@ def transfer_all(src_prim: Usd.Prim, dst_prim: Usd.Prim):
         
         handle_attribute_transfer(dst_attr, attr)
 
-        # if attr.ValueMightBeTimeVarying():
-        #     for t in attr.GetTimeSamples():
-        #         dst_attr.Set(attr.Get(t), t)
-        # else:
-        #     dst_attr.Set(attr.Get())
-
 
 def handle_attribute_transfer(new: Usd.Attribute, old: Usd.Attribute):
     """
@@ -372,7 +347,7 @@ def handle_attribute_transfer(new: Usd.Attribute, old: Usd.Attribute):
         old (Usd.Attribute): Primitive to transfer values to.
     """
 
-    if old.ValueMightBeTimeVarying():
+    if old.ValueMightBeTimeVarying() or old.GetNumTimeSamples() > 0:
         new.Clear()
         for t in old.GetTimeSamples():
             if float(t).is_integer():
