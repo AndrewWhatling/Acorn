@@ -47,6 +47,7 @@ class ReExporter:
             core.recursive_move_prims(self.stage, root_prim, path)
         
         self.stage = validator.Validator().validate_geo(self.stage)
+        #self.stage = validator.Validator().clear_pivots(self.stage)
 
         output_folder = fr"{os.getenv('PROJ')}\35_depot\assets\{self.asset_type}\{self.asset_name}\Geo"
         output_file_base = fr"{self.asset_name}"
