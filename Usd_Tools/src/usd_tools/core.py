@@ -263,7 +263,7 @@ def transfer_xform_ops(src_prim: Usd.Prim, dst_prim: Usd.Prim):
         src_attr = src_op.GetAttr()
         dst_attr = dst_op.GetAttr()
 
-        handle_attribute_transfer(src_attr, dst_attr)
+        handle_attribute_transfer(dst_attr, src_attr)
 
 
 def transfer_primvars(src_prim: Usd.Prim, dst_prim: Usd.Prim):
@@ -303,7 +303,7 @@ def transfer_primvars(src_prim: Usd.Prim, dst_prim: Usd.Prim):
         # Get attribs from primvar and set
         src_attr = src_pv.GetAttr()
         dst_attr = dst_pv.GetAttr()
-        handle_attribute_transfer(src_attr, dst_attr)
+        handle_attribute_transfer(dst_attr, src_attr)
 
 
 def transfer_all(src_prim: Usd.Prim, dst_prim: Usd.Prim):
@@ -343,8 +343,8 @@ def handle_attribute_transfer(new: Usd.Attribute, old: Usd.Attribute):
     Transfers one attribute from one primitive to another.
 
     Args:
-        new (Usd.Attribute): Primitive to transfer values from.
-        old (Usd.Attribute): Primitive to transfer values to.
+        new (Usd.Attribute): Primitive to transfer values to.
+        old (Usd.Attribute): Primitive to transfer values from.
     """
 
     if old.ValueMightBeTimeVarying() or old.GetNumTimeSamples() > 0:

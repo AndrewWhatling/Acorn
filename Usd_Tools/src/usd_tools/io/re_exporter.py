@@ -85,3 +85,7 @@ class ReExporter:
 
         self.stage.Export(output_file)
     
+
+if __name__ == "__main__":
+    exp = ReExporter(r"C:\users\andrew\downloads\temp_01.usda", "Birdfeeder", "Prop")
+    exp.export_mesh()
