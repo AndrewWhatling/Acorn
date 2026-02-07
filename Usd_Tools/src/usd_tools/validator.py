@@ -160,6 +160,12 @@ class Validator:
             
 
     def clear_pivots(self, prim: Usd.Prim):
+        """
+        Clears xFormOp pivots from Mesh.
+
+        Args:
+            prim (Usd.Prim): Prim to clear pivots from.
+        """
         xf = UsdGeom.Xformable(prim)
         if not xf:
             pass
