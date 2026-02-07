@@ -1,6 +1,6 @@
 [project]
 name = "project_manager"
-version = "0.1.7"
+version = "0.2.0"
 description = "Acorn project manager"
 readme = "README.md"
 authors = [

@@ -1,6 +1,6 @@
 [project]
 name = "maya_shelves"
-version = "0.1.7"
+version = "0.2.0"
 description = "Maya shelf scripts"
 readme = "README.md"
 authors = [
