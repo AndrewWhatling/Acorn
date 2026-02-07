@@ -14,6 +14,8 @@ class Validator:
             Usd.Stage: Cleaned Stage.
         """
         to_remove = []
+        first_frame = stage.GetStartTimeCode()
+
         for prim in stage.Traverse():
             if prim.GetName() == "mtl" or prim.IsA("GeomSubset"):
                 to_remove.append(prim.GetPath())
@@ -33,8 +35,25 @@ class Validator:
                 prim.RemoveProperty('material:binding')
 
             if prim.IsA("Mesh"):
+                static = ["faceVertexCounts", "faceVertexIndices"]
+                animated = ["points", "extent"]
                 for attr in prim.GetAuthoredAttributes():
-                    self.validate_attribute(stage, prim, attr, "Anim")
+                    name = attr.GetName()
+
+                    if name in static:
+                        value = attr.Get(first_frame)
+                        attr.Clear()
+                        attr.Set(value)
+                    
+                    elif name in animated or name.startswith("xFormOp"):
+                        timesamples = attr.GetTimeSamples()
+                        if len(timesamples) > 1:
+                            for sample in timesamples:
+                                if not float(sample).is_integer():
+                                    attr.ClearAtTime(sample)
+
+                    else:
+                        prim.RemoveProperty(name)
 
         for path in to_remove:
             stage.RemovePrim(path)
@@ -53,14 +72,45 @@ class Validator:
             Usd.Stage: Cleaned Stage.
         """
         to_remove = []
-        
+        first_frame = stage.GetStartTimeCode()
+
         for prim in stage.Traverse():
             if prim.GetName() == "mtl" or prim.IsA("GeomSubset") or prim.IsA("Material"):
                 to_remove.append(prim.GetPath())
                 continue
+            
+            core.transfer_material(prim, prim)
 
-            # for attr in prim.GetAuthoredAttributes():
-            #         self.validate_attribute(stage, prim, attr, "Geo")
+            if prim.HasAuthoredMetadata("kind"):
+                    prim.ClearMetadata("kind")
+
+            if prim.HasAuthoredMetadata("apiSchemas"):
+                prim.ClearMetadata("apiSchemas")
+
+            if prim.HasAPI(UsdShade.MaterialBindingAPI):
+                binding_api = UsdShade.MaterialBindingAPI(prim)
+                binding_api.UnbindDirectBinding()
+
+            if prim.GetRelationship('material:binding'):
+                prim.RemoveProperty('material:binding')
+
+            for attr in prim.GetAuthoredAttributes():
+                    name = attr.GetName()
+                    valid = ["points", "extent", "primvars:st", "primvars:st:indices",
+                            "doubleSided", "faceVertexCounts", "faceVertexIndices",
+                            "normals"]
+                    
+                    if name in valid:
+                        if attr.ValueMightBeTimeVarying():
+                            value = attr.Get(time=first_frame)
+                            attr.Clear()
+                            attr.Set(value)
+
+                    elif name == "primvars:mat":
+                        if attr.Get(first_frame) == "initialShadingGroup":
+                            prim.RemoveProperty(name)
+                    else:
+                        prim.RemoveProperty(name)
             
             self.clear_pivots(prim)
             core.set_prim_defaults(prim)
@@ -85,83 +135,31 @@ class Validator:
             if prim.HasAuthoredMetadata("kind"):
                 prim.ClearMetadata("kind")
 
+            first_frame = stage.GetStartTimeCode()
             if prim.IsA("Camera"):
-                for attr in prim.GetAuthoredAttributes():
-                    self.validate_attribute(stage, prim, attr, "Cam")
-
-        return stage
-        
-
-    def validate_attribute(self, stage: Usd.Stage, prim: Usd.Prim, attr: Usd.Attribute, type: str):
-        """
-        Cleans up unneccessary attribute.
-
-        Args:
-            stage (Usd.Stage): Stage to clean.
-            prim (Usd.Prim): Prim to clean.
-            attr (Usd.Attribute): Attribute to clean.
-            type (str): Type of cleaning to perform.
-        """
-        name = attr.GetName()
-        first_frame = stage.GetStartTimeCode()
-
-        match type:
-            case "Anim":
-                static = ["faceVertexCounts", "faceVertexIndices"]
-                animated = ["points", "extent"]
-                        
-                if name in static:
-                    value = attr.Get(first_frame)
-                    attr.Clear()
-                    attr.Set(value)
-                
-                elif name in animated or name.startswith("xFormOp"):
-                    timesamples = attr.GetTimeSamples()
-                    if len(timesamples) > 1:
-                        for sample in timesamples:
-                            if not float(sample).is_integer():
-                                attr.ClearAtTime(sample)
-
-                else:
-                    prim.RemoveProperty(name)
-            
-            case "Geo":
-                valid = ["points", "extent", "primvars:st", "primvars:st:indices",
-                          "doubleSided", "faceVertexCounts", "faceVertexIndices",
-                          "normals"]
-                
-                if name in valid:
-                    if attr.ValueMightBeTimeVarying():
-                        value = attr.Get(time=first_frame)
-                        attr.Clear()
-                        attr.Set(value)
-
-                elif name == "primvars:mat":
-                    if attr.Get(first_frame) == "initialShadingGroup":
-                        prim.RemoveProperty(name)
-                else:
-                    prim.RemoveProperty(name)
-
-            case "Cam":
                 static = ["clippingRange", "focalLength", "focusDistance",
                          "horizontalAperture", "verticalAperture"]
                 
-                if name in static:
-                    value = attr.Get(first_frame)
-                    attr.Clear()
-                    attr.Set(value)
+                for attr in prim.GetAuthoredAttributes():
+                    name = attr.GetName()
+                    if name in static:
+                        value = attr.Get(first_frame)
+                        attr.Clear()
+                        attr.Set(value)
 
-                elif name.startswith("xFormOp"):
-                    timesamples = attr.GetTimeSamples()
-                    if len(timesamples) > 1:
-                        for sample in timesamples:
-                            if not float(sample).is_integer():
-                                attr.ClearAtTime(sample)
-            
+                    elif name.startswith("xFormOp"):
+                        timesamples = attr.GetTimeSamples()
+                        if len(timesamples) > 1:
+                            for sample in timesamples:
+                                if not float(sample).is_integer():
+                                    attr.ClearAtTime(sample)
+
+        return stage
+
 
     def clear_pivots(self, prim: Usd.Prim):
         """
-        Clears xFormOp pivots from Mesh.
+        Clears xFormOp pivots from prim.
 
         Args:
             prim (Usd.Prim): Prim to clear pivots from.
@@ -180,4 +178,3 @@ class Validator:
             attr = op.GetAttr()
             attr.Clear()
         
-

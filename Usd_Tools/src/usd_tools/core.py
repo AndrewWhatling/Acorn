@@ -294,7 +294,7 @@ def transfer_primvars(src_prim: Usd.Prim, dst_prim: Usd.Prim):
         if src_pv_indices and src_pv_indices.HasAuthoredValue():
             # If primvar indices exist, create on dest primvar and set
 
-            if src_pv_indices.ValueMightBeTimeVarying():
+            if src_pv_indices.ValueMightBeTimeVarying() or src_pv_indices.GetNumTimeSamples() > 0:
                 for t in src_pv_indices.GetTimeSamples():
                     dst_pv.SetIndices(src_pv_indices.Get(t), t)
             else:
