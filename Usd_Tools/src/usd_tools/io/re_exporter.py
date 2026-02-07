@@ -88,5 +88,5 @@ class ReExporter:
     
 
 if __name__ == "__main__":
-    exp = ReExporter(r"C:\users\andrew\downloads\temp_01.usda", "Birdfeeder", "Prop")
+    exp = ReExporter(r"S:\usd_testing\removing_pivots\in_01.usda", "Birdfeeder", "Prop")
     exp.export_mesh()

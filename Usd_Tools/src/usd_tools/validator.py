@@ -62,6 +62,7 @@ class Validator:
             # for attr in prim.GetAuthoredAttributes():
             #         self.validate_attribute(stage, prim, attr, "Geo")
             
+            self.clear_pivots(prim)
             core.set_prim_defaults(prim)
         
         for path in to_remove:
@@ -158,48 +159,19 @@ class Validator:
                                 attr.ClearAtTime(sample)
             
 
-    def clear_pivots(self, stage: Usd.Stage) -> Usd.Stage:
+    def clear_pivots(self, prim: Usd.Prim):
+        xf = UsdGeom.Xformable(prim)
+        if not xf:
+            pass
+
+        ops = xf.GetOrderedXformOps()
+        pivot_ops = [op for op in ops if "pivot" in op.GetOpName()]
+        if not pivot_ops:
+            pass
+
+        # Gather time samples
+        for op in ops:
+            attr = op.GetAttr()
+            attr.Clear()
         
-        for prim in stage.Traverse():
-            xf = UsdGeom.Xformable(prim)
-            if not xf:
-                return
-
-            ops = xf.GetOrderedXformOps()
-            pivot_ops = [op for op in ops if "pivot" in op.GetOpName()]
-            if not pivot_ops:
-                return  # nothing to do
-
-            # Gather time samples
-            times = set()
-            for op in ops:
-                attr = op.GetAttr()
-                if attr.ValueMightBeTimeVarying():
-                    times.update(attr.GetTimeSamples())
-
-            if not times:
-                times = [Usd.TimeCode.Default()]
-
-            # Remove existing ops
-            xf.ClearXformOpOrder()
-
-            # Create clean ops
-            t_op = xf.AddTranslateOp()
-            r_op = xf.AddRotateXYZOp()
-            s_op = xf.AddScaleOp()
-
-            for t in times:
-                m = xf.GetLocalTransformation(t)[0]
-
-                translation = m.ExtractTranslation()
-                rotation = m.ExtractRotation().GetEulerAngles()
-                scale = Gf.Vec3d(
-                    m[0][0], m[1][1], m[2][2]
-                )
-
-                t_op.Set(translation, t)
-                r_op.Set(rotation, t)
-                s_op.Set(scale, t)
-
-        return stage
 
