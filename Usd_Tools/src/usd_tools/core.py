@@ -287,7 +287,10 @@ def transfer_primvars(src_prim: Usd.Prim, dst_prim: Usd.Prim):
         type_name = src_pv.GetTypeName()
         interpolation = src_pv.GetInterpolation()
 
-        dst_pv = dst_pv_api.CreatePrimvar(name, type_name, interpolation)
+        if not dst_pv_api.HasPrimvar(name):
+            dst_pv = dst_pv_api.CreatePrimvar(name, type_name, interpolation)
+        else:
+            dst_pv = dst_pv_api.GetPrimvar(name)
         
         # Get original primvar indices
         src_pv_indices = src_pv.GetIndicesAttr()
