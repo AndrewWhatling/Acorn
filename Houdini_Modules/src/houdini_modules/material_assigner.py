@@ -4,6 +4,8 @@ from importlib import reload
 from pxr import UsdGeom
 import voptoolutils
 from typing import Any
+from utils import file_utils
+import re
 
 # Material assigner logic
 
@@ -85,7 +87,7 @@ def type_menu_script() -> list[str]:
         list[str]: Menu of asset types for user to select from.
     """
     root = os.getenv("PROJ")
-    path = fr"{root}\30_assets\depot"
+    path = fr"{root}\35_depot\assets"
 
     values = []
 
@@ -106,7 +108,7 @@ def name_menu_script() -> list[str]:
     """
     root = os.getenv("PROJ")
     type = hou.pwd().parm("type").rawValue()
-    path = fr"{root}\30_assets\depot\{type}"
+    path = fr"{root}\35_depot\assets\{type}"
 
     if type == "Empty":
         return ["Empty", "Empty"]
@@ -119,6 +121,25 @@ def name_menu_script() -> list[str]:
     return sorted(values)
 
 
+def version_menu_script() -> list[str]:
+    """
+    Menu script for version parameter on material auto assigner node.
+
+    Returns:
+        list[str]: Menu of versions for user to select from.
+    """
+    root = os.getenv("PROJ")
+
+    type = hou.parm("type").rawValue()
+    name = hou.parm("name").rawValue()
+    mat_type = hou.parm("mat_type").rawValue()
+    path = fr"{root}\35_depot\assets\{type}\{name}\mat\{mat_type}"
+
+    if not os.path.exists(path) or os.listdir(path) == []:
+        return ["Empty", "Empty"]
+    else:
+        return [i for j in os.listdir(path) for i in (j, j)]
+
 # Internal Node Parameter Scripts
 
 def material_path() -> str:
@@ -130,11 +151,57 @@ def material_path() -> str:
     """
     type = hou.parm("../type").rawValue()
     name = hou.parm("../name").rawValue()
+    mat_type = hou.parm("../mat_type").rawValue()
 
     if type == "Empty":
         return "/materials/"
 
-    return f"/Scene/Assets/{type}/{name}/Mat/"
+    return f"/Scene/Assets/{type}/{name}/Mat/{mat_type}/"
+
+
+def load_path() -> str:
+    """
+    Generates path for material load.
+
+    Returns:
+        str: Material path.
+    """
+
+    root = os.getenv("PROJ")
+
+    type = hou.parm("../type").rawValue()
+    name = hou.parm("../name").rawValue()
+    mat_type = hou.parm("../mat_type").rawValue()
+    version = hou.parm("../version").rawValue()
+
+    if version == "Empty":
+        return ""
+    
+    path = f"{root}/35_depot/assets/{type}/{name}/mat/{mat_type}/{version}/{name}_mat_{version}.usd"
+    return path
+
+
+def export_path() -> str:
+    """
+    Generates path for material export.
+
+    Returns:
+        str: Material path.
+    """
+    root = os.getenv("PROJ")
+
+    type = hou.parm("../type").rawValue()
+    name = hou.parm("../name").rawValue()
+    mat_type = hou.parm("../mat_type").rawValue()
+    target_path = fr"{root}\35_depot\assets\{type}\{name}\mat"
+
+    if os.path.exists(target_path) and not os.path.exists(target_path + f"\\{mat_type}"):
+        os.makedirs(target_path + f"\\{mat_type}")
+    
+    version = file_utils.get_next_render_folder(fr"{root}\35_depot\assets\{type}\{name}\mat\{mat_type}")
+    
+    path = f"{root}/35_depot/assets/{type}/{name}/mat/{mat_type}/{version}/{name}_mat_{version}.usd"
+    return path
 
 
 # Python Module Scripts
@@ -187,3 +254,19 @@ def clear_all(kwargs: dict[str, Any]):
     for n in kwargs["node"].node("materiallibrary1").children():
         n.destroy()
 
+
+def export_material(kwargs: dict[str, Any]):
+    """
+    Save materials to disk.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments from the material auto assigner node.
+    """
+
+    self = kwargs["node"]
+
+    if self.parm("type").rawValue() != "Empty" or self.parm("name").rawValue() != "Empty":
+        self.parm("save_to_disk/execute").pressButton()
+        self.parm("load").set(1)
+    else:
+        hou.ui.displayMessage("Asset not found, may be empty.")

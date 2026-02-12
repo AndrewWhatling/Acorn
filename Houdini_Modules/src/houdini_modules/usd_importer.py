@@ -1,6 +1,7 @@
 import os
 from utils import io_utils as io
 from typing import Any
+import re
 
 try:
     import hou 
@@ -111,20 +112,44 @@ def version_menu_script(kwargs: dict[str, Any]) -> list[str]:
     root = self.parm("root").rawValue()
     asset = self.parm("asset").rawValue()
     curr_type = self.parm("type").rawValue().lower()
-    shotnum = self.parm("shot").rawValue()
+    
+    if self.parm("mat_type"):
+        mat_type =self.parm("mat_type").rawValue()
+    else:
+        mat_type = None
+
+    pattern = '\d{4}'
+    if re.search(pattern, self.parm("shot").rawValue()):
+        shotnum = self.parm("shot").rawValue()
+    else:
+        shotnum = hou.expandString(self.parm("shot").expression())
+    
     asset_types = assets.get(root, [])
     shot_types = shots.get(root, [])
 
-    if asset == "N/A":
-        return ["Empty", "Empty"]
+    # if asset == "N/A":
+    #     return ["Empty", "Empty"]
 
     path = ""
-    if curr_type in asset_types:
+
+    if root in ["Cameras", "Lights", "Atmospherics", "Rendersettings"]:
+        path = os.path.join(depot, "shots", shotnum, root)
+
+    elif curr_type in ["mat"]:
+        path = os.path.join(depot, "assets", root, asset, curr_type, mat_type)
+
+    elif curr_type in ["geo", "rig", "groom", "restguides"]:
         path = os.path.join(depot, "assets", root, asset, curr_type)
-    if curr_type in shot_types:
+
+    elif curr_type in ["anim", "animguides", "volumetric"]:
         path = os.path.join(depot, "shots", shotnum, root, asset, curr_type)
 
-    if path == "":
+    # if curr_type in asset_types:
+    #     path = os.path.join(depot, "assets", root, asset, curr_type)
+    # if curr_type in shot_types:
+    #     path = os.path.join(depot, "shots", shotnum, root, asset, curr_type)
+
+    if path == "" or not os.path.exists(path):
         return ["Empty", "Empty"]
     
     vals = []
@@ -150,17 +175,40 @@ def import_path() -> str:
     root = hou.parm("../root").rawValue()
     asset = hou.parm("../asset").rawValue()
     curr_type = hou.parm("../type").rawValue().lower()
-    shotnum = hou.parm("../shot").rawValue()
+
+    if hou.parm("../mat_type"):
+        mat_type = hou.parm("../mat_type").rawValue()
+    else:
+        mat_type = None
+
+    pattern = '\d{4}'
+    if re.search(pattern, hou.parm("../shot").rawValue()):
+        shotnum = hou.parm("../shot").rawValue()
+    else:
+        shotnum = hou.expandString(hou.parm("../shot").expression())
     version = hou.parm("../version").rawValue()
 
     asset_types = assets.get(root, [])
     shot_types = shots.get(root, [])
 
     path = ""
-    if curr_type in asset_types:
+
+    if root in ["Cameras", "Lights", "Atmospherics", "Rendersettings"]:
+        path = os.path.join(depot, "shots", shotnum, root)
+
+    elif curr_type in ["mat"]:
+        path = os.path.join(depot, "assets", root, asset, curr_type, mat_type, version)
+
+    elif curr_type in ["geo", "rig", "groom", "restguides"]:
         path = os.path.join(depot, "assets", root, asset, curr_type)
-    if curr_type in shot_types:
+
+    elif curr_type in ["anim", "animguides", "volumetric"]:
         path = os.path.join(depot, "shots", shotnum, root, asset, curr_type)
+
+    # elif curr_type in asset_types:
+    #     path = os.path.join(depot, "assets", root, asset, curr_type)
+    # elif curr_type in shot_types:
+    #     path = os.path.join(depot, "shots", shotnum, root, asset, curr_type)
 
     if path == "":
         return ""

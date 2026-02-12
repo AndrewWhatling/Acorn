@@ -193,15 +193,16 @@ def create_new_camera(stage: Usd.Stage, path: str) -> Usd.Stage:
 
     if len(prims) == 1:
         cam = prims[0]
-        for src_attr in cam.GetAttributes():
+        transfer_all(cam, new_prim)
+        # for src_attr in cam.GetAttributes():
             
-            if not src_attr.HasAuthoredValue() or src_attr.GetName().startswith("xformOp"):
-                continue
+        #     if not src_attr.HasAuthoredValue() or src_attr.GetName().startswith("xformOp"):
+        #         continue
             
-            dst_attr = new_prim.CreateAttribute(src_attr.GetName(), src_attr.GetTypeName())
-            handle_attribute_transfer(src_attr, dst_attr)
+        #     dst_attr = new_prim.CreateAttribute(src_attr.GetName(), src_attr.GetTypeName())
+        #     handle_attribute_transfer(src_attr, dst_attr)
         
-        transfer_xform_ops(new_prim, cam)
+        # transfer_xform_ops(new_prim, cam)
 
     elif len(prims) == 2:
         cam = None
@@ -326,7 +327,7 @@ def transfer_all(src_prim: Usd.Prim, dst_prim: Usd.Prim):
     if src_prim.IsA(UsdGeom.Gprim):
         transfer_primvars(src_prim, dst_prim)
     
-    # --- 3. Generic attributes (skip primvars) ---
+    # --- 3. Generic attributes ---
     for attr in src_prim.GetAttributes():
         name = attr.GetName()
         if name.startswith("primvars:") or name.startswith("xformOp"):  # skip primvars; handled above
