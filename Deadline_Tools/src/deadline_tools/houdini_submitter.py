@@ -30,7 +30,10 @@ class HoudiniSubmitter:
         self.submit_message = self.node.parm("submit_message").eval()
         self.infile = file_utils.reformat_path(hou.hipFile.path())
         self.renderrop = f"{self.node.path()}/render"
+        self.deeprop = f"{self.node.path()}/deep"
         self.outdir = file_utils.reformat_path(os.path.join(os.getenv("PROJ"), "45_render", f"sh{self.shotnum}", self.version))
+        self.ocio = os.environ["OCIO"]
+        self.machinelimit = self.node.parm("machinelimit").eval()
 
 
     def submit_to_deadline(self):
@@ -49,6 +52,8 @@ class HoudiniSubmitter:
         Group=none
         Priority=51
 
+        MachineLimit={self.machinelimit}
+
         Frames={self.framerange}
         ChunkSize=1
 
@@ -60,6 +65,7 @@ class HoudiniSubmitter:
         EnvironmentKeyValue2=PIPELINE_PYTHONPATH={self.pypath}
         EnvironmentKeyValue3=HOUDINI_PYTHONPATH={self.pypath};%HOUDINI_PYTHONPATH%
         EnvironmentKeyValue4=PYTHONPATH={self.pypath};%PYTHONPATH%
+        EnvironmentKeyValue5=OCIO={self.ocio}
         """
         )
 
@@ -88,7 +94,68 @@ class HoudiniSubmitter:
             plugin_info.name
         ])
 
-        hou.ui.displayMessage("Job submitted!")
+        hou.ui.displayMessage("Job submitted - Beauty render!")
+
+
+    def submit_deep_to_deadline(self):
+        """
+        Creates and submits job to deadline.
+        """
+        self.get_frames()
+        job_info = tempfile.NamedTemporaryFile(delete=False, suffix="_job.info", mode="w", encoding="utf-8")
+        plugin_info = tempfile.NamedTemporaryFile(delete=False, suffix="_plugin.info", mode="w", encoding="utf-8")
+
+        job_info.write(
+        fr"""Plugin=Houdini
+        Name=BushtailBandit_sh{self.shotnum}_{self.version}_deep_{self.submit_name}
+        Comment={self.submit_message}
+        Pool=main
+        Group=none
+        Priority=51
+
+        MachineLimit={self.machinelimit}
+
+        Frames={self.framerange}
+        ChunkSize=1
+
+        OutputDirectory0={self.outdir}
+
+        EnvironmentKeyValue0=PROJ={self.proj}
+        EnvironmentKeyValue1=DATABASE={self.database}
+
+        EnvironmentKeyValue2=PIPELINE_PYTHONPATH={self.pypath}
+        EnvironmentKeyValue3=HOUDINI_PYTHONPATH={self.pypath};%HOUDINI_PYTHONPATH%
+        EnvironmentKeyValue4=PYTHONPATH={self.pypath};%PYTHONPATH%
+        EnvironmentKeyValue5=OCIO={self.ocio}
+        """
+        )
+
+        job_info.close()
+
+        plugin_info.write(
+        fr"""SceneFile={self.infile}
+
+        OutputDriver={self.deeprop}
+        Version=20.5
+        Renderer=Karma
+
+        IgnoreInputs=True
+        UseSceneFrameRange=False
+        InitializeSim=False
+        """
+        )
+        plugin_info.close()
+
+        cmd = deadline_utils.get_deadline()
+
+        # Submit job
+        subprocess.run([
+            cmd,
+            job_info.name,
+            plugin_info.name
+        ])
+
+        hou.ui.displayMessage("Job submitted - Deep camera map!")
 
 
     def get_frames(self):

@@ -17,7 +17,7 @@ def shot_menu_script(kwargs: dict[str, Any]) -> list[str]:
     Menu script for shot parameter on usd importer node.
 
     Args:
-        kwargs (dict[str, Any]): Keyword arguments from usd importer node.
+        kwargs (dict[str, Any]): Keyword arguments from acorn render node.
 
     Returns:
         list[str]: Menu of shot numbers for user to select from.
@@ -30,7 +30,7 @@ def version_menu_script(kwargs: dict[str, Any]) -> list[str]:
     Menu script for asset parameter on usd importer node.
 
     Args:
-        kwargs (dict[str, Any]): Keyword arguments from usd importer node.
+        kwargs (dict[str, Any]): Keyword arguments from acorn render node.
 
     Returns:
         list[str]: Menu of versions for user to write render file to.
@@ -40,10 +40,9 @@ def version_menu_script(kwargs: dict[str, Any]) -> list[str]:
     if len(os.listdir(path)) > 0:
         versions = os.listdir(path)
         vals = [i for j in versions for i in (j, j)]
-        next = fu.get_next_render_folder(path)
-        return [next, "New"] + sorted(vals, reverse=True)
+        return sorted(vals, reverse=True)
     else:
-        return ["v001", "New"]
+        return ["Empty", "Empty"]
 
 
 def submit_to_deadline(kwargs: dict[str, Any]):
@@ -51,7 +50,7 @@ def submit_to_deadline(kwargs: dict[str, Any]):
     Custom submitter to send jobs to deadline render farm.
 
     Args:
-        kwargs (dict[str, Any]): Keyword arguments from usd importer node.
+        kwargs (dict[str, Any]): Keyword arguments from acorn render node.
     """
     self = kwargs["node"]
     text = "File needs to save before render can be submitted.\nIncrement file?"
@@ -64,8 +63,14 @@ def submit_to_deadline(kwargs: dict[str, Any]):
         hou.hipFile.saveAndIncrementFileName()
 
     if confirm != 2:
+        if self.parm("version").rawValue() == "Empty":
+            upversion(kwargs)
+
         submitter = houdini_submitter.HoudiniSubmitter(kwargs)
         submitter.submit_to_deadline()
+
+        if self.parm("deep").eval() == 1:
+            submitter.submit_deep_to_deadline()
 
 
 def rop_export_path() -> str:
@@ -79,7 +84,7 @@ def rop_export_path() -> str:
     shotnum = hou.parm("../shot").rawValue()
     version = hou.parm("../version").rawValue()
 
-    path = os.path.join(proj, "45_render", f"sh{shotnum}", version, f"BushtailBandit_sh{shotnum}_{version}.$F4.exr")
+    path = os.path.join(proj, "45_render", f"sh{shotnum}", version, "beauty", f"BushtailBandit_sh{shotnum}_{version}.$F4.exr")
     path =  path.replace("P:\\", "\\\\monster\\projects\\")
     path = path.replace("\\", "/")
     return path
@@ -96,7 +101,21 @@ def deep_export_path() -> str:
     shotnum = hou.parm("../shot").rawValue()
     version = hou.parm("../version").rawValue()
 
-    path = os.path.join(proj, "45_render", f"sh{shotnum}", version, f"BushtailBandit_sh{shotnum}_{version}_dcm.$F4.exr")
+    path = os.path.join(proj, "45_render", f"sh{shotnum}", version, "deep", f"BushtailBandit_sh{shotnum}_{version}_dcm.$F4.exr")
     path =  path.replace("P:\\", "\\\\monster\\projects\\")
     path = path.replace("\\", "/")
     return path
+
+
+def upversion(kwargs: dict[str, Any]):
+    """
+    Creates new folder version to render to.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments from acorn render node.
+    """
+    self = kwargs["node"]
+    path = os.path.join(renders_root, f'sh{self.parm("shot").rawValue()}')
+    next = fu.get_next_render_folder(path)
+    os.makedirs(os.path.join(path, next))
+    self.parm("version").pressButton()
