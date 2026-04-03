@@ -107,6 +107,23 @@ def deep_export_path() -> str:
     return path
 
 
+def shadow_reflection_export_path() -> str:
+    """
+    Export path for render files to be sent to.
+
+    Returns:
+        str: Path to render exr files to.
+    """
+    proj = os.getenv("PROJ")
+    shotnum = hou.parm("../shot").rawValue()
+    version = hou.parm("../version").rawValue()
+
+    path = os.path.join(proj, "45_render", f"sh{shotnum}", version, "ShadowReflection", f"BushtailBandit_sh{shotnum}_{version}_SR.$F4.exr")
+    path =  path.replace("P:\\", "\\\\monster\\projects\\")
+    path = path.replace("\\", "/")
+    return path
+
+
 def upversion(kwargs: dict[str, Any]):
     """
     Creates new folder version to render to.

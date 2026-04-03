@@ -79,7 +79,7 @@ class AssetReferencerUi(QtWidgets.QMainWindow):
         top_layout = QtWidgets.QHBoxLayout(top)
 
         self.asset_type_combobox = ui_utils.new_parm("Asset Type:", top_layout, font, box_width, "QComboBox")
-        self.asset_name_combobox = ui_utils.new_parm("Asset Name:", top_layout, font, box_width, "QComboBox")
+        self.asset_name_combobox = ui_utils.new_parm("Asset Name:", top_layout, font, box_width*2, "QComboBox")
 
         top_layout.addStretch(1)
 

@@ -144,6 +144,9 @@ def version_menu_script(kwargs: dict[str, Any]) -> list[str]:
     elif curr_type in ["anim", "animguides", "volumetric"]:
         path = os.path.join(depot, "shots", shotnum, root, asset, curr_type)
 
+    if asset == "Grass" and curr_type != "mat":
+        path = os.path.join(depot, "shots", shotnum, root, asset, curr_type)
+
     # if curr_type in asset_types:
     #     path = os.path.join(depot, "assets", root, asset, curr_type)
     # if curr_type in shot_types:
@@ -203,6 +206,9 @@ def import_path() -> str:
         path = os.path.join(depot, "assets", root, asset, curr_type)
 
     elif curr_type in ["anim", "animguides", "volumetric"]:
+        path = os.path.join(depot, "shots", shotnum, root, asset, curr_type)
+
+    if asset == "Grass" and curr_type != "mat":
         path = os.path.join(depot, "shots", shotnum, root, asset, curr_type)
 
     # elif curr_type in asset_types:
